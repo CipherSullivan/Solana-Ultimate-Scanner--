@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolSec - Solana's Security</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen">
+
+    <!-- Background elements -->
+    <div id="particles-js"></div>
+    <div class="floating-circle circle-1"></div>
+    <div class="floating-circle circle-2"></div>
+    <div class="floating-circle circle-3"></div>
+    
+    <!-- Background Logo -->
+    <div id="background-logo" class="fixed z-0 opacity-5 select-none pointer-events-none transform -translate-x-1/2 -translate-y-1/2" style="top: 50%; left: 50%; font-size: 20vw; font-weight: 900; letter-spacing: -0.05em;">
+        SOLSEC
+    </div>
+    
+    <div class="container mx-auto px-4 py-8 max-w-7xl relative">
+        <!-- Header -->
+        <header class="mb-8 glassmorphism p-6 rounded-2xl fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold solana-gradient flex items-center">
+                        SolSec
+                    </h1>
+                    <p class="text-gray-400 mt-1">Your Wallet's Security Guardian.</p>
+                </div>
+                <div class="flex items-center">
+                    <div class="mr-4 bg-black bg-opacity-40 px-4 py-2 rounded-lg flex items-center">
+                        <div class="activity-dot active"></div>
+                        <span id="connection-status">Connected</span>
+                    </div>
+                    <button id="refresh-btn" class="solana-btn px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Search Section -->
+        <div class="card p-6 mb-8 glassmorphism scale-in">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-grow">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+                        <input type="text" id="address-search" placeholder="Search" 
+                            class="w-full bg-black bg-opacity-40 pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                    </div>
+                </div>
+                <div>
+                    <button id="scan-btn" class="solana-btn px-6 py-3 rounded-lg w-full md:w-auto">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        Scan Address
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex flex-wrap gap-2">
+                <span class="bg-purple-900 bg-opacity-40 text-sm px-3 py-1 rounded-full flex items-center">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    Security Scanner
+                </span>
+                <span class="bg-purple-900 bg-opacity-40 text-sm px-3 py-1 rounded-full flex items-center">
+                    <i class="fas fa-bolt mr-1"></i>
+                    Real-time Updates
+                </span>
+                <div class="tooltip">
+                    <span class="tooltiptext text-xs">Replace YOUR_API_KEY_HERE in the backend code with your CoinGecko API key for real token prices</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Address List -->
+            <div class="w-full lg:w-2/5 card p-5 glassmorphism fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-wallet mr-2"></i>
+                        Monitored Addresses
+                    </h2>
+                    <span id="address-count" class="bg-purple-900 bg-opacity-40 text-sm px-3 py-1 rounded-full">
+                        0 Addresses
+                    </span>
+                </div>
+                
+                <div id="addresses-list" class="overflow-y-auto max-h-[600px] pr-2">
+                    <!-- Address cards will be added here dynamically -->
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3"></i>
+                        <p>Loading addresses...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Address Details -->
+            <div class="w-full lg:w-3/5 card p-5 glassmorphism slide-in-right">
+                <div id="address-details-container">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Address Details & Security
+                        </h2>
+                        <div class="flex gap-2">
+                            <button id="share-btn" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition-colors">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                            <button id="export-btn" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition-colors">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="no-address-selected" class="text-center text-gray-500 py-16 fade-in">
+                        <i class="fas fa-shield-alt text-5xl mb-4"></i>
+                        <h3 class="text-xl font-medium mb-2">No Address Selected</h3>
+                        <p class="max-w-sm mx-auto">Search for a Solana address to scan for security vulnerabilities and view detailed information</p>
+                    </div>
+                    
+                    <!-- Loading progress tracker -->
+                    <div id="loading-progress" class="hidden mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium">Scanning address...</span>
+                            <span id="loading-status" class="text-sm text-gray-400">Basic info</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="address-details" class="hidden fade-in">
+                        <!-- Address Header -->
+                        <div class="bg-purple-900 bg-opacity-20 rounded-lg p-4 mb-6">
+                            <div class="flex flex-col md:flex-row justify-between">
+                                <div>
+                                    <h3 id="selected-address" class="font-mono text-lg break-all"></h3>
+                                    <div class="flex items-center mt-2">
+                                        <a href="#" id="solscan-link" target="_blank" class="text-purple-400 hover:text-purple-300 text-sm flex items-center mr-4">
+                                            <i class="fas fa-external-link-alt mr-1"></i>
+                                            View on Solscan
+                                        </a>
+                                        <span id="last-updated" class="text-gray-400 text-sm">
+                                            Updated: Just now
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 md:mt-0">
+                                    <div class="text-2xl font-bold solana-gradient" id="sol-balance">0 SOL</div>
+                                    <div class="text-gray-400 text-sm mt-1" id="usd-balance">≈ $0.00 USD</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Security Score Section -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-lg font-medium">
+                                    <i class="fas fa-shield-alt mr-2"></i>
+                                    Security Status
+                                </h4>
+                                <div id="security-badge" class="security-badge security-secure">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Secure
+                                </div>
+                            </div>
+                            
+                            <div class="card bg-gray-800 bg-opacity-60 p-4 rounded-lg mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="text-sm">Risk Score</div>
+                                    <div id="risk-score" class="text-lg font-bold">0/100</div>
+                                </div>
+                                
+                                <div class="risk-meter mb-4">
+                                    <div id="risk-meter-indicator" style="transform: scaleX(1);"></div>
+                                </div>
+                                
+                                <div id="security-issues-container" class="mt-4">
+                                    <!-- Security issues will be added here -->
+                                    <div class="text-center text-gray-500 py-3" id="no-security-issues">
+                                        <i class="fas fa-shield-alt text-3xl mb-2 text-green-400"></i>
+                                        <p>No security issues detected</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Portfolio Overview -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-lg font-medium">
+                                    <i class="fas fa-chart-pie mr-2"></i>
+                                    Portfolio Overview
+                                </h4>
+                                <div id="total-portfolio-value" class="text-lg font-bold solana-gradient">$0.00</div>
+                            </div>
+                            
+                            <!-- Portfolio Chart & Stats -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Portfolio Chart -->
+                                <div class="card bg-gray-800 bg-opacity-60 p-4 rounded-lg">
+                                    <div id="chart-container" class="relative" style="height: 280px;">
+                                        <!-- Loading skeleton -->
+                                        <div id="chart-loading" class="flex items-center justify-center h-full">
+                                            <div class="text-center">
+                                                <div class="spinner mx-auto mb-3"></div>
+                                                <p class="text-gray-400">Building chart...</p>
+                                            </div>
+                                        </div>
+                                        <canvas id="portfolio-chart" class="hidden"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Portfolio List -->
+                                <div class="card bg-gray-800 bg-opacity-60 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h5 class="font-medium">Holdings</h5>
+                                        <select id="sort-options" class="bg-gray-900 text-sm px-2 py-1 rounded">
+                                            <option value="value">Sort by Value</option>
+                                            <option value="name">Sort by Name</option>
+                                            <option value="percent">Sort by Percentage</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div id="portfolio-list" class="overflow-y-auto max-h-[220px]">
+                                        <div class="text-center text-gray-500 py-8">
+                                            <div class="spinner mx-auto mb-3"></div>
+                                            <p>Loading portfolio...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Historical Performance -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-medium mb-3">
+                                <i class="fas fa-chart-line mr-2"></i>
+                                Historical Performance
+                            </h4>
+                            
+                            <div class="card bg-gray-800 bg-opacity-60 p-4 rounded-lg">
+                                <div id="history-chart-container" class="relative" style="height: 200px;">
+                                    <!-- Loading or no data placeholder -->
+                                    <div id="history-loading" class="flex items-center justify-center h-full">
+                                        <div class="text-center">
+                                            <i class="fas fa-history text-3xl mb-2 text-gray-600"></i>
+                                            <p class="text-gray-400">Historical data will appear here after multiple scans</p>
+                                        </div>
+                                    </div>
+                                    <canvas id="history-chart" class="hidden"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- NFT Gallery (only shows if NFTs are present) -->
+                        <div id="nft-section" class="mb-6 hidden">
+                            <h4 class="text-lg font-medium mb-3">
+                                <i class="fas fa-images mr-2"></i>
+                                NFT Collection
+                            </h4>
+                            
+                            <div class="card bg-gray-800 bg-opacity-60 p-4 rounded-lg">
+                                <div id="nft-gallery" class="nft-grid">
+                                    <!-- NFTs will be added here dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Transactions -->
+                        <h4 class="text-lg font-medium mb-3">
+                            <i class="fas fa-exchange-alt mr-2"></i>
+                            Recent Transactions
+                        </h4>
+                        
+                        <div id="transactions-list" class="overflow-y-auto max-h-[320px]">
+                            <!-- Transactions will be added here dynamically -->
+                            <div class="text-center text-gray-500 py-8">
+                                <div class="spinner mx-auto mb-3"></div>
+                                <p>Loading transactions...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates (for JavaScript use) -->
+    <template id="address-card-template">
+        <div class="address-card card bg-gray-800 p-4 mb-3 cursor-pointer hover:bg-gray-700 transition-colors" data-address="">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="font-mono text-sm address-text truncate max-w-[200px]"></div>
+                    <div class="text-gray-400 text-xs mt-1 flex items-center">
+                        <span class="transaction-count mr-3"></span>
+                        <span class="last-activity"></span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="balance font-semibold"></div>
+                    <div class="usd-value text-gray-400 text-xs"></div>
+                    <div class="security-status mt-1"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="transaction-item-template">
+        <div class="transaction-item p-3 border-b border-gray-800 hover:bg-opacity-10 transition-colors">
+            <div class="flex justify-between mb-1">
+                <div class="text-sm font-medium signature truncate max-w-[200px]"></div>
+                <div class="text-xs text-gray-400 timestamp"></div>
+            </div>
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <span class="status-indicator bg-green-500 h-2 w-2 rounded-full mr-2"></span>
+                    <span class="text-xs status"></span>
+                </div>
+                <a href="#" class="text-purple-400 hover:text-purple-300 text-xs explorer-link" target="_blank">
+                    <i class="fas fa-external-link-alt mr-1"></i>
+                    View Transaction
+                </a>
+            </div>
+        </div>
+    </template>
+    
+    <template id="token-item-template">
+        <div class="token-item flex items-center justify-between p-3 border-b border-gray-800">
+            <div class="flex items-center">
+                <div class="token-icon w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3 overflow-hidden">
+                    <img class="token-logo w-full h-full object-cover" src="" alt="Token" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNiIgZmlsbD0iIzZBNkE2QSIvPjx0ZXh0IHg9IjE2IiB5PSIyMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEycHgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4/PC90ZXh0Pjwvc3ZnPg=='">
+                </div>
+                <div>
+                    <div class="font-medium token-name"></div>
+                    <div class="text-xs text-gray-400 token-balance"></div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="font-medium token-value"></div>
+                <div class="text-xs token-percent text-green-400"></div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="nft-card-template">
+        <div class="nft-card">
+            <div class="aspect-square">
+                <img class="nft-image w-full h-full object-cover" src="" alt="NFT" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiM0QjUxNjMiLz48dGV4dCB4PSI3NSIgeT0iNzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMnB4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
+            </div>
+            <div class="p-2">
+                <div class="nft-name text-sm font-medium truncate"></div>
+                <div class="nft-collection text-xs text-gray-400 truncate"></div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="security-issue-template">
+        <div class="security-issue mb-3 rounded-lg p-3">
+            <div class="flex items-start">
+                <div class="issue-icon mr-3 text-lg"></div>
+                <div>
+                    <div class="issue-title font-medium mb-1"></div>
+                    <div class="issue-description text-sm text-gray-300 mb-1"></div>
+                    <div class="issue-details text-xs text-gray-400"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Particles.js script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
